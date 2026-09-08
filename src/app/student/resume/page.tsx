@@ -90,9 +90,25 @@ export default function ResumeAnalyzer() {
           const data = await res.json();
           if (data.text) {
             setResumeText(data.text);
+            setLoadingStep(1); // "Identifying skills..."
+            
+            const aiRes = await fetch("/api/ai", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "analyze-resume",
+                data: { resumeText: data.text },
+              }),
+            });
+
+            if (aiRes.ok) {
+              const profileData = await aiRes.json();
+              setProfile(profileData);
+            }
           }
         } else {
-          setError("Failed to extract text from PDF");
+          const errData = await res.json().catch(() => ({}));
+          setError(errData.error || "Failed to extract text from PDF");
         }
       } catch (err) {
         setError("Error uploading PDF");
